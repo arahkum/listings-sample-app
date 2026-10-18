@@ -21,10 +21,29 @@ def get_listing(listing_id: int) -> Listing:
     return listing
 
 
+def _parse_price(value: str | None) -> float | None:
+    """Per spec: a non-numeric price value is ignored (treated as not
+    provided), not rejected with an error."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
 @app.get("/listings", response_model=ListingSearchResult)
 def search_listings(
     category: str | None = None,
+    min_price: str | None = None,
+    max_price: str | None = None,
     page: int = Query(default=1, ge=1),
 ) -> ListingSearchResult:
-    items, total = storage.search_listings(category=category, status=ListingStatus.active, page=page)
+    items, total = storage.search_listings(
+        category=category,
+        status=ListingStatus.active,
+        min_price=_parse_price(min_price),
+        max_price=_parse_price(max_price),
+        page=page,
+    )
     return ListingSearchResult(items=items, total=total, page=page)
