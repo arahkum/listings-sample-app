@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 
-from app.models import Listing, ListingCreate, ListingStatus
+from app.models import Listing, ListingCreate, ListingSearchResult, ListingStatus
 from app import storage
 
 app = FastAPI(title="listings-sample-app")
@@ -21,6 +21,10 @@ def get_listing(listing_id: int) -> Listing:
     return listing
 
 
-@app.get("/listings", response_model=list[Listing])
-def search_listings(category: str | None = None) -> list[Listing]:
-    return storage.search_listings(category=category, status=ListingStatus.active)
+@app.get("/listings", response_model=ListingSearchResult)
+def search_listings(
+    category: str | None = None,
+    page: int = Query(default=1, ge=1),
+) -> ListingSearchResult:
+    items, total = storage.search_listings(category=category, status=ListingStatus.active, page=page)
+    return ListingSearchResult(items=items, total=total, page=page)

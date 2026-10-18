@@ -1,0 +1,19 @@
+{
+  "ticket_id": "TICKET-2",
+  "ticket_text": "Add a price range filter to search (min and max price).",
+  "user": "Add a price range filter to search (min and max price).",
+  "problem": "Search cannot filter listings by price range.",
+  "acceptance_criteria": [
+    "Search accepts min_price and max_price and returns listings within range.",
+    "Listings with price equal to min_price or max_price are included.",
+    "If only min_price provided, filter from min_price upward; if only max_price, filter down to max_price."
+  ],
+  "edge_cases": [
+    "min_price greater than max_price should return empty result.",
+    "Non-numeric price values should be ignored and not cause error."
+  ],
+  "test_cases": [
+    "Search with min_price=100 and max_price=200 returns listings priced 100-200.",
+    "Search with only max_price=500 returns listings priced <=500."
+  ]
+}

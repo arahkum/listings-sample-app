@@ -29,10 +29,18 @@ def get_listing(listing_id: int) -> Listing | None:
 def search_listings(
     category: str | None = None,
     status: ListingStatus | None = ListingStatus.active,
-) -> list[Listing]:
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[Listing], int]:
+    """Returns (page of results, total matching count). Page numbers < 1 are
+    treated as page 1; a page beyond the available results returns an empty list."""
     results = list(_listings.values())
     if category is not None:
         results = [listing for listing in results if listing.category == category]
     if status is not None:
         results = [listing for listing in results if listing.status == status]
-    return results
+
+    total = len(results)
+    safe_page = max(page, 1)
+    start = (safe_page - 1) * page_size
+    return results[start : start + page_size], total

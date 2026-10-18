@@ -1,0 +1,19 @@
+{
+  "ticket_id": "TICKET-1",
+  "ticket_text": "Add pagination to the listings search endpoint so results come back 20 at a time.",
+  "user": "developer",
+  "problem": "Search endpoint returns all listings, causing performance issues.",
+  "acceptance_criteria": [
+    "API returns 20 listings per page by default.",
+    "Client can request specific page via page parameter.",
+    "Total count is included in response header or body."
+  ],
+  "edge_cases": [
+    "Page number less than 1 defaults to 1.",
+    "Page number beyond max returns empty list."
+  ],
+  "test_cases": [
+    "Request page=1 returns first 20 listings.",
+    "Request page=999 returns empty array when no listings."
+  ]
+}
