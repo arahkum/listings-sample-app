@@ -62,6 +62,45 @@ def test_get_listing_404_when_missing():
     assert resp.status_code == 404
 
 
+def test_search_filters_by_price_range():
+    _create(title="Cheap", price=50.0)
+    _create(title="Mid", price=150.0)
+    _create(title="Expensive", price=500.0)
+    resp = client.get("/listings", params={"min_price": 100, "max_price": 200})
+    titles = [listing["title"] for listing in resp.json()["items"]]
+    assert titles == ["Mid"]
+
+
+def test_search_price_range_is_inclusive():
+    _create(title="Exactly min", price=100.0)
+    _create(title="Exactly max", price=200.0)
+    resp = client.get("/listings", params={"min_price": 100, "max_price": 200})
+    titles = {listing["title"] for listing in resp.json()["items"]}
+    assert titles == {"Exactly min", "Exactly max"}
+
+
+def test_search_with_only_max_price():
+    _create(title="Cheap", price=50.0)
+    _create(title="Expensive", price=500.0)
+    resp = client.get("/listings", params={"max_price": 100})
+    titles = [listing["title"] for listing in resp.json()["items"]]
+    assert titles == ["Cheap"]
+
+
+def test_search_min_price_greater_than_max_price_returns_empty():
+    _create(title="Anything", price=100.0)
+    resp = client.get("/listings", params={"min_price": 200, "max_price": 100})
+    assert resp.json()["items"] == []
+
+
+def test_search_ignores_non_numeric_price_instead_of_erroring():
+    _create(title="Anything", price=100.0)
+    resp = client.get("/listings", params={"min_price": "not-a-number"})
+    assert resp.status_code == 200
+    titles = [listing["title"] for listing in resp.json()["items"]]
+    assert "Anything" in titles
+
+
 def test_search_returns_20_per_page_by_default():
     for i in range(25):
         _create(title=f"Item {i}")
