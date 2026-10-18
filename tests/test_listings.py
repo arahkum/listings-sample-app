@@ -101,6 +101,42 @@ def test_search_ignores_non_numeric_price_instead_of_erroring():
     assert "Anything" in titles
 
 
+def test_mark_listing_sold():
+    listing_id = _create(title="Bike").json()["id"]
+    resp = client.patch(f"/listings/{listing_id}/sold")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "sold"
+
+
+def test_mark_sold_404_when_missing():
+    resp = client.patch("/listings/999/sold")
+    assert resp.status_code == 404
+
+
+def test_marking_already_sold_listing_sold_again_is_not_an_error():
+    listing_id = _create(title="Bike").json()["id"]
+    client.patch(f"/listings/{listing_id}/sold")
+    resp = client.patch(f"/listings/{listing_id}/sold")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "sold"
+
+
+def test_sold_listings_excluded_when_status_filter_applied():
+    listing_id = _create(title="Bike").json()["id"]
+    client.patch(f"/listings/{listing_id}/sold")
+    resp = client.get("/listings", params={"status": "active"})
+    titles = [listing["title"] for listing in resp.json()["items"]]
+    assert "Bike" not in titles
+
+
+def test_sold_listings_appear_when_no_status_filter_used():
+    listing_id = _create(title="Bike").json()["id"]
+    client.patch(f"/listings/{listing_id}/sold")
+    resp = client.get("/listings")
+    titles = [listing["title"] for listing in resp.json()["items"]]
+    assert "Bike" in titles
+
+
 def test_search_returns_20_per_page_by_default():
     for i in range(25):
         _create(title=f"Item {i}")
