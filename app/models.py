@@ -20,3 +20,9 @@ class ListingCreate(BaseModel):
 class Listing(ListingCreate):
     id: int
     status: ListingStatus = ListingStatus.active
+
+
+class ListingSearchResult(BaseModel):
+    items: list[Listing]
+    total: int
+    page: int

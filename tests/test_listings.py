@@ -44,7 +44,8 @@ def test_search_returns_created_listing():
     _create(title="Bike")
     resp = client.get("/listings")
     assert resp.status_code == 200
-    titles = [listing["title"] for listing in resp.json()]
+    body = resp.json()
+    titles = [listing["title"] for listing in body["items"]]
     assert "Bike" in titles
 
 
@@ -52,10 +53,42 @@ def test_search_filters_by_category():
     _create(title="Bike", category="vehicles")
     _create(title="Sofa", category="furniture")
     resp = client.get("/listings", params={"category": "furniture"})
-    titles = [listing["title"] for listing in resp.json()]
+    titles = [listing["title"] for listing in resp.json()["items"]]
     assert titles == ["Sofa"]
 
 
 def test_get_listing_404_when_missing():
     resp = client.get("/listings/999")
     assert resp.status_code == 404
+
+
+def test_search_returns_20_per_page_by_default():
+    for i in range(25):
+        _create(title=f"Item {i}")
+    resp = client.get("/listings")
+    body = resp.json()
+    assert len(body["items"]) == 20
+    assert body["total"] == 25
+    assert body["page"] == 1
+
+
+def test_search_page_2_returns_remaining_items():
+    for i in range(25):
+        _create(title=f"Item {i}")
+    resp = client.get("/listings", params={"page": 2})
+    body = resp.json()
+    assert len(body["items"]) == 5
+    assert body["page"] == 2
+
+
+def test_search_page_beyond_results_returns_empty():
+    _create(title="Only item")
+    resp = client.get("/listings", params={"page": 999})
+    body = resp.json()
+    assert body["items"] == []
+    assert body["total"] == 1
+
+
+def test_search_page_less_than_1_is_rejected():
+    resp = client.get("/listings", params={"page": 0})
+    assert resp.status_code == 422
